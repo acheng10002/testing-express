@@ -1,0 +1,23 @@
+{
+  "name": "testing-express",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acheng10002/testing-express.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/acheng10002/testing-express/issues"
+  },
+  "homepage": "https://github.com/acheng10002/testing-express#readme",
+  "devDependencies": {
+    "supertest": "^7.1.1"
+  }
+}
