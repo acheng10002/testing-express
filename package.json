@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -17,7 +18,14 @@
     "url": "https://github.com/acheng10002/testing-express/issues"
   },
   "homepage": "https://github.com/acheng10002/testing-express#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
   "devDependencies": {
+    "jest": "^29.7.0",
     "supertest": "^7.1.1"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
