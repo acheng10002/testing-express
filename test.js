@@ -37,6 +37,8 @@ test("index route works", (done) => {
   request(app)
     // pass it my index route
     .get("/")
+    // makes the request using HTTP/2 protocol only
+    .http2()
     // use request function to make sure the response match the types...
     .expect("Content-Type", /json/)
     // and content I expect
@@ -51,11 +53,25 @@ test("testing route works", (done) => {
   request(app)
     // unlike above, instead tests the post method
     .post("/test")
-    /* sets the Content-Type header of the outgoing HTTP request, so the server 
-    knows what kind of data format I'm sending */
+    /* sets the Content-Type header of the outgoing HTTP request to 
+    application/x-www-form-urlencoded , so the server knows what kind 
+    of data format I'm sending, default is json 
+    - takes the MIME type or the extension name, xml, json, png, etc. */
     .type("form")
     // sends the request body/JSON payload
     .send({ item: "hey" })
+    /* can setup automatic serialization for types other than JSON and forms
+    it's automatic for JSON and forms
+    serializing - converting a JS object into a string or binary format 
+                  suitable for transmission over the network 
+    - before sending a request, I serialize an object to JSON, form-encoded string,
+    or XML
+    - on the server, I deserialize it back into a usuable data structure 
+    - I can replace built-in serialization with .serialize() to send payload in a
+    custom format */
+    .serialize((obj) => {
+      return "string generated from obj";
+    })
     // waits for the POST requrest to finish
     .then(() => {
       request(app)
@@ -71,6 +87,13 @@ test("user route works", () => {
   request(app)
     // pass the request object to my user route to test the get method
     .get("/user")
+    /* SuperAgent automatically retries requests if they fail 
+    first arg - number of retries
+    second arg- callback that .retry() calls before each retry 
+                cb may return true/false to control whether request should be retried 
+    - use .retry() only with requests that are idempotent (performing it once
+    has the same effect as performing it multiple times */
+    .retry(1, callback)
     // use request function to make sure the response matches the types...
     .expect("Content-Type", /json/)
     // length....
@@ -94,6 +117,9 @@ describe("GET /user", () => {
     const response = await request(app)
       // pass the request object to my user route to test the get method
       .get("/user")
+      /* .set() with a field name and value sets header fields 
+      - or pass an object to set several fields in a single call */
+      .set("API-Key", "foobar")
       /* sets custom HTTP headers on the outgoing request
       Accept header tells the server: client prefers to receive the 
       response in JSON */
@@ -110,6 +136,12 @@ describe("SuperTest requests with http2 option", () => {
     // enables http2 protocol by appending an option
     await request(app, { http2: true })
       .get("/user")
+      /* .accept() sets the Accept header */
+      .accept("json")
+      /* .query() accepts a single object and objects, used with GET method 
+      to form a query string, /user?query=Manny 
+      .query() accepts strings too, or joined */
+      .query({ query: "Manny" })
       .expect("Content-Type", /json/)
       .expect("Content-Length", "15")
       .expect(200);
@@ -120,6 +152,13 @@ describe("SuperTest requests with http2 option", () => {
 
     await agent
       .get("/user")
+      .query({ format: "json" })
+      .query({ dest: "/login" })
+      // an asciibetically-sorted query string can be enabled with req.sortQuery()
+      .sortQuery()
+      /* I can also provide a custom sorting function, comparison fn should take
+      2 arg and return a -/0/+ integer
+      .sortQuery(myComparisonFn) */
       .expect("Content-Type", /json/)
       .expect("Content-Length", "15")
       .expect(200);
@@ -167,6 +206,10 @@ describe("GET /user/auth", () => {
     const response = await request(app)
       // pass the request object to my user/auth route to test the get method
       .get("/user/auth")
+      // sets client private key
+      .key(key)
+      // set client certificate chain
+      .cert(cert)
       // sends Basic Auth
       .auth("username", "password")
       /* sets custom HTTP headers on the outgoing request
@@ -188,7 +231,9 @@ describe("POST /users", () => {
     const response = await request(app)
       // pass the request object to my users route to test the post method
       .post("/users")
-      // sends the request body/JSON payload
+      /* writes a JSON string, sends the request body/JSON payload 
+      I can use multiple .send() calls to write the data 
+      - sending strings sets Content-Type to application/x-www-form-urlencoded */
       .send({ name: "john" })
       /* sets custom HTTP headers on the outgoing request
       Accept header tells the server: client prefers to receive the 
@@ -242,6 +287,12 @@ describe("POST /", () => {
       .field("complex_object", JSON.stringify({ attribute: "value" }), {
         contentType: "application/json",
       })
+      /* parse known
+      .parse['application/json'] = function (str) {
+        return {'object': 'parsed from str'};
+    };
+    I can set up a custom parser
+    */
       /* attaches avatar.jpg file from the path under the form field named avatar,
       ensures the file path exists */
       .attach("avatar", path.join(__dirname, "test/fixtures/avatar.jpg"))
@@ -313,6 +364,22 @@ describe("GET /api/content with cookies", () => {
     expect(response.text).toBe("hey");
   });
 });
+
+/* 
+request
+    // .query() method for HEAD requests, path: /users?email=joe@smith.com
+    .head('/users')
+        .query({ email: 'joe@smith.com' })
+        .then(res => {
+
+        });
+
+// POST the content of the HTML form identified by id="myForm"
+request.post('/user')
+    // sending a FormData object is supported
+    .send(new FormData(document.getElementById('myForm')))
+    .then(callback, errorCallback)
+*/
 
 /* do not run test code on production database 
 test runner - tool that executes test files, tracks results, and reports outcomes 
